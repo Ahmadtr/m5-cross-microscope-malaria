@@ -52,7 +52,7 @@ def main():
     print(f"pair {name}: {n} inliers")
     hi, li = cv2.cvtColor(hi, cv2.COLOR_BGR2RGB), cv2.cvtColor(li, cv2.COLOR_BGR2RGB)
     scale = float(np.sqrt(abs(np.linalg.det(inv[:2, :2]))))  # LCM px -> HCM px
-    fig = plt.figure(figsize=(7.2, 6.4))
+    fig = plt.figure(figsize=(7.2, 5.0))
     gs = fig.add_gridspec(2, 4, height_ratios=[1.35, 1])
     for c, (img, title) in enumerate(((hi, "Expensive microscope (HCM)"), (li, "Low-cost microscope (LCM)"))):
         ax = fig.add_subplot(gs[0, 2 * c: 2 * c + 2])
@@ -70,7 +70,7 @@ def main():
     for c, (img, title) in enumerate(zooms):
         ax = fig.add_subplot(gs[1, c])
         ax.imshow(img); ax.set_title(title, fontsize=8); ax.axis("off")
-    fig.tight_layout()
+    fig.tight_layout(pad=0.3, h_pad=0.4, w_pad=0.3)
     a.out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(a.out, dpi=300)
     fig.savefig(a.out.with_suffix(".pdf"))

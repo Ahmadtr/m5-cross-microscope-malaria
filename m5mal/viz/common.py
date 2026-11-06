@@ -10,6 +10,7 @@ from m5mal.eval.metric import postprocess
 
 SHORT = ("R", "T", "S", "G")  # ring, trophozoite, schizont, gametocyte
 COLORS = {"tp": "#1a9850", "fp": "#d73027", "fn": "#fdd835"}
+GT_COLOR = "#00e5ff"
 
 
 def match(det: np.ndarray, gt: np.ndarray, iou_thr: float = 0.5):
@@ -53,28 +54,29 @@ def image_f1(det: np.ndarray, gt: np.ndarray, thr: float) -> float:
     return 2 * tp / max(2 * tp + fp + fn, 1)
 
 
-def draw_gt(ax, img, gt, lw: float = 1.6, color: str = "#00e5ff"):
+def _box(ax, box, color, lw, ls, letter, fs):
+    x0, y0, x1, y1 = box
+    ax.add_patch(patches.Rectangle((x0, y0), x1 - x0, y1 - y0, fill=False, ec=color, lw=lw, ls=ls))
+    ax.text(x0, y0, letter, color=color, fontsize=fs, fontweight="bold", va="bottom", clip_on=True)
+
+
+def draw_gt(ax, img, gt, lw: float = 1.6, fs: float = 6.5):
     """Ground-truth boxes only, with their stage letter."""
     ax.imshow(img)
     ax.set_xticks([]); ax.set_yticks([])
-    fs = max(5, img.shape[1] / 330)
-    for c, x0, y0, x1, y1 in gt:
-        ax.add_patch(patches.Rectangle((x0, y0), x1 - x0, y1 - y0, fill=False, ec=color, lw=lw))
-        ax.text(x0, y0 - 4, SHORT[int(c)], color=color, fontsize=fs, fontweight="bold", va="bottom")
+    for c, *b in gt:
+        _box(ax, b, GT_COLOR, lw, "-", SHORT[int(c)], fs)
 
 
-def draw(ax, img, det, gt, thr: float, lw: float = 1.6, labels: bool = True):
-    """Green = correct detection, red = false alarm (or wrong stage), yellow dashed = missed parasite."""
+def draw(ax, img, det, gt, thr: float, lw: float = 1.6, fs: float = 6.5):
+    """Green = correct, red = false alarm / wrong stage / duplicate, yellow dashed = missed parasite."""
     ax.imshow(img)
     ax.set_xticks([]); ax.set_yticks([])
     d = det[det[:, 4] >= thr]
     tp, fp, fn = match(d, gt)
-    fs = max(5, img.shape[1] / 330)
-    for kind, idx, src, ls in (("fn", fn, gt[:, 1:], "--"), ("tp", tp, d[:, :4], "-"), ("fp", fp, d[:, :4], "-")):
+    for i in fn:
+        _box(ax, gt[i, 1:], COLORS["fn"], lw, "--", SHORT[int(gt[i, 0])], fs)
+    for kind, idx in (("tp", tp), ("fp", fp)):
         for i in idx:
-            x0, y0, x1, y1 = src[i]
-            ax.add_patch(patches.Rectangle((x0, y0), x1 - x0, y1 - y0, fill=False, ec=COLORS[kind], lw=lw, ls=ls))
-            if labels:
-                cls = int(gt[i, 0]) if kind == "fn" else int(d[i, 5])
-                ax.text(x0, y0 - 4, SHORT[cls], color=COLORS[kind], fontsize=fs, fontweight="bold", va="bottom")
+            _box(ax, d[i, :4], COLORS[kind], lw, "-", SHORT[int(d[i, 5])], fs)
     return len(tp), len(fp), len(fn)
