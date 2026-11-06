@@ -9,7 +9,7 @@ from matplotlib import patches
 from m5mal.eval.metric import postprocess
 
 SHORT = ("R", "T", "S", "G")  # ring, trophozoite, schizont, gametocyte
-COLORS = {"tp": "#1a9850", "fp": "#d73027", "fn": "#fdd835"}
+COLORS = {"tp": "#1a9850", "fp": "#d73027", "fn": "#fdd835", "ws": "#ff8c00"}
 GT_COLOR = "#00e5ff"
 
 
@@ -68,15 +68,46 @@ def draw_gt(ax, img, gt, lw: float = 1.6, fs: float = 6.5):
         _box(ax, b, GT_COLOR, lw, "-", SHORT[int(c)], fs)
 
 
+def wrong_stage(d, gt, fp, fn, iou_thr: float = 0.5):
+    """Pairs (det, gt) among the unmatched ones that overlap (IoU >= 0.5) but disagree on the stage.
+    The metric counts each such pair as one false alarm AND one miss; the figures show it as one 'wrong stage' box."""
+    if not fp or not fn:
+        return []
+    iou = torchvision.ops.box_iou(torch.as_tensor(d[fp, :4]), torch.as_tensor(gt[fn, 1:])).numpy()
+    pairs, used_d, used_g = [], set(), set()
+    for k in np.argsort(-iou, axis=None):
+        a, b = np.unravel_index(k, iou.shape)
+        if iou[a, b] < iou_thr:
+            break
+        if a not in used_d and b not in used_g:
+            used_d.add(a); used_g.add(b); pairs.append((fp[a], fn[b]))
+    return pairs
+
+
 def draw(ax, img, det, gt, thr: float, lw: float = 1.6, fs: float = 6.5):
-    """Green = correct, red = false alarm / wrong stage / duplicate, yellow dashed = missed parasite."""
+    """Green = correct, orange = right place but wrong stage (label 'true->predicted'),
+    red = false alarm or duplicate, yellow dashed = missed parasite. Returns the four counts."""
     ax.imshow(img)
     ax.set_xticks([]); ax.set_yticks([])
     d = det[det[:, 4] >= thr]
     tp, fp, fn = match(d, gt)
+    ws = wrong_stage(d, gt, fp, fn)
+    fp = [i for i in fp if i not in {a for a, _ in ws}]
+    fn = [i for i in fn if i not in {b for _, b in ws}]
+    dup = []  # extra box on a parasite that another box already found (any stage)
+    if fp and tp:
+        iou = torchvision.ops.box_iou(torch.as_tensor(d[fp, :4]), torch.as_tensor(d[tp, :4])).numpy()
+        dup = [fp[j] for j in range(len(fp)) if iou[j].max() >= 0.5]
+    fp = [i for i in fp if i not in dup]
     for i in fn:
         _box(ax, gt[i, 1:], COLORS["fn"], lw, "--", SHORT[int(gt[i, 0])], fs)
-    for kind, idx in (("tp", tp), ("fp", fp)):
-        for i in idx:
-            _box(ax, d[i, :4], COLORS[kind], lw, "-", SHORT[int(d[i, 5])], fs)
-    return len(tp), len(fp), len(fn)
+    for i in fp:
+        _box(ax, d[i, :4], COLORS["fp"], lw, "-", SHORT[int(d[i, 5])], fs)
+    for i in dup:  # drawn first, slightly enlarged and dotted, so the correct box stays visible on top
+        x0, y0, x1, y1 = d[i, :4]; m = 0.06 * (x1 - x0)
+        ax.add_patch(patches.Rectangle((x0 - m, y0 - m), x1 - x0 + 2 * m, y1 - y0 + 2 * m, fill=False, ec=COLORS["fp"], lw=lw, ls=":"))
+    for i, g in ws:
+        _box(ax, d[i, :4], COLORS["ws"], lw, "-", f"{SHORT[int(gt[g, 0])]}→{SHORT[int(d[i, 5])]}", fs)
+    for i in tp:
+        _box(ax, d[i, :4], COLORS["tp"], lw, "-", SHORT[int(d[i, 5])], fs)
+    return len(tp), len(ws), len(dup), len(fp), len(fn)

@@ -98,17 +98,21 @@ def main():
         draw_gt(axes[r, 0], img, s.gt[k], fs=fs)
         axes[r, 0].set_ylabel(f"{name}\n({len(s.gt[k])} parasites)", fontsize=8)
         for c, (label, _) in enumerate(runs, 1):
-            tp, fp, fn = draw(axes[r, c], img, s.dets[label][k], s.gt[k], s.thr[label], fs=fs)
-            axes[r, c].set_xlabel(f"{tp} correct, {fp} false, {fn} missed", fontsize=7)
+            tp, ws, dup, fp, fn = draw(axes[r, c], img, s.dets[label][k], s.gt[k], s.thr[label], fs=fs)
+            parts = [f"{tp} correct"] + [t for n, t in ((ws, f"{ws} wrong stage"), (fn, f"{fn} missed"),
+                                                         (fp, f"{fp} false alarm"), (dup, f"{dup} extra")) if n]
+            axes[r, c].set_xlabel(", ".join(parts), fontsize=6.5)
         for ax in axes[r]:
             ax.set_xlim(win[0], win[2]); ax.set_ylim(win[3], win[1])
     axes[0, 0].set_title("Ground truth", fontsize=9)
     for c, (label, _) in enumerate(runs, 1):
         axes[0, c].set_title(label, fontsize=9)
     handles = [Line2D([], [], color=GT_COLOR, lw=2, label="ground truth"), Line2D([], [], color=COLORS["tp"], lw=2, label="correct"),
-               Line2D([], [], color=COLORS["fp"], lw=2, label="false alarm / wrong stage / duplicate"),
+               Line2D([], [], color=COLORS["ws"], lw=2, label="right place, wrong stage (true→predicted)"),
+               Line2D([], [], color=COLORS["fp"], lw=2, label="false alarm"),
+               Line2D([], [], color=COLORS["fp"], lw=2, ls=":", label="extra box on a found parasite"),
                Line2D([], [], color=COLORS["fn"], lw=2, ls="--", label="missed")]
-    fig.legend(handles=handles, loc="lower center", ncol=4, fontsize=7.5, frameon=False)
+    fig.legend(handles=handles, loc="lower center", ncol=6, fontsize=6.5, frameon=False)
     fig.tight_layout(rect=(0, 0.045, 1, 1), h_pad=1.0, w_pad=0.4)
     a.out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(a.out, dpi=300)
