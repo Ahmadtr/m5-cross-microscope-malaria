@@ -2,7 +2,7 @@ __pycache__/
 *.pyc
 *.pt
 *.pth
-data/
-runs/
+/data/
+/runs/
 .venv/
 *.egg-info/
