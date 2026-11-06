@@ -1,0 +1,4 @@
+# Point these at your local copies. The datasets are not redistributed with this repository;
+# see the README for where to download M5-Malaria and BBBC041.
+data_root: /path/to/data        # holds yolo/, coco/ and codamal/ folders written by m5mal.data
+results_root: /path/to/runs     # one folder per training run (weights, predictions, scores)
