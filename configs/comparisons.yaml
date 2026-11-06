@@ -1,0 +1,12 @@
+# Comparisons tested in the paper: method a vs method b, over training seeds (results/per_seed.csv).
+- {name: "1000x paired: RF-DETR+transfer vs YOLOv5m+transfer", setting: m5_1000x_paired, split: LCM_test, a: RF-DETR+v5aug+transfer, b: YOLOv5m+transfer}
+- {name: "1000x paired: RF-DETR+transfer vs CodaMal (fair)", setting: m5_1000x_paired, split: LCM_test, a: RF-DETR+v5aug+transfer, b: CodaMal-fair-bs16}
+- {name: "1000x no LCM: RF-DETR vs YOLOv5m", setting: m5_1000x_nolcm, split: LCM_test, a: RF-DETR+v5aug, b: YOLOv5m}
+- {name: "400x no LCM: RF-DETR vs YOLOv5m", setting: m5_400x_nolcm, split: LCM_test, a: RF-DETR+v5aug, b: YOLOv5m}
+- {name: "BBBC new camera: RF-DETR vs YOLOv5m", setting: bbbc, split: test_newcam, a: RF-DETR+v5aug, b: YOLOv5m}
+- {name: "BBBC new camera: RF-DETR vs YOLOv8s", setting: bbbc, split: test_newcam, a: RF-DETR+v5aug, b: YOLOv8s}
+- {name: "BBBC new camera: YOLOv5m vs YOLOv8s", setting: bbbc, split: test_newcam, a: YOLOv5m, b: YOLOv8s}
+- {name: "BBBC new camera, ring: RF-DETR vs YOLOv5m", setting: bbbc, split: test_newcam, a: RF-DETR+v5aug, b: YOLOv5m, metric: ring}
+- {name: "BBBC new camera, trophozoite: RF-DETR vs YOLOv5m", setting: bbbc, split: test_newcam, a: RF-DETR+v5aug, b: YOLOv5m, metric: trophozoite}
+- {name: "BBBC same camera: RF-DETR vs YOLOv5m", setting: bbbc, split: val_samecam, a: RF-DETR+v5aug, b: YOLOv5m}
+- {name: "BBBC same camera: RF-DETR vs YOLOv8s", setting: bbbc, split: val_samecam, a: RF-DETR+v5aug, b: YOLOv8s}
