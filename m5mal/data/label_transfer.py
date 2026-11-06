@@ -47,8 +47,9 @@ def read_yolo(f: Path, w, h) -> list:
     return out
 
 
-def register(hcm, lcm):
-    """3x3 matrix mapping HCM full-resolution pixels to LCM pixels, and the RANSAC inlier count."""
+def register(hcm, lcm, return_points: bool = False):
+    """3x3 matrix mapping HCM full-resolution pixels to LCM pixels, and the RANSAC inlier count.
+    With return_points=True also returns the inlier keypoint pairs (HCM xy, LCM xy) in full-resolution pixels."""
     gh, sh = _gray(hcm, WORK_WIDTH)
     gl, sl = _gray(lcm, WORK_WIDTH)
     sift = cv2.SIFT_create(4000)
@@ -65,7 +66,11 @@ def register(hcm, lcm):
     if m is None:
         return None, 0
     a = np.vstack([m, [0, 0, 1]])
-    return np.diag([1 / sl, 1 / sl, 1]) @ a @ np.diag([sh, sh, 1]), int(inl.sum())
+    full = np.diag([1 / sl, 1 / sl, 1]) @ a @ np.diag([sh, sh, 1])
+    if return_points:
+        keep = inl.ravel().astype(bool)
+        return full, int(inl.sum()), (ph[keep] / sh, pl[keep] / sl)
+    return full, int(inl.sum())
 
 
 def map_boxes(boxes, m, w, h) -> list:
