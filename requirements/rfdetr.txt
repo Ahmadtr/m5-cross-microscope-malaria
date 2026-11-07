@@ -1,0 +1,10 @@
+# RF-DETR training, scoring, statistics and figures (tested: Python 3.12, CUDA 12.6)
+rfdetr==1.11.2
+torch>=2.5
+torchvision>=0.20
+numpy
+scipy
+pyyaml
+pillow
+opencv-python-headless
+matplotlib

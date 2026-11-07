@@ -1,0 +1,18 @@
+# CodaMal / YOLOv5 v7.0 baselines, separate environment (tested: Python 3.11, CUDA 12.1)
+# CodaMal's code imports pkg_resources; set YOLOv5_AUTOINSTALL=False before running it.
+torch==2.5.1
+torchvision==0.20.1
+numpy==1.26.4
+opencv-python==4.10.0.84
+pandas==2.2.3
+seaborn==0.13.2
+setuptools<70
+pyyaml
+scipy
+tqdm
+matplotlib
+psutil
+thop
+gitpython
+pillow
+requests
