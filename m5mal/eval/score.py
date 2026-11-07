@@ -60,7 +60,10 @@ def main():
     ap.add_argument("--json", type=Path, help="also write all scores to this file")
     a = ap.parse_args()
     allres = {}
-    for run in a.runs:
+    runs = []
+    for r in a.runs:  # expand wildcards ourselves (Windows shells do not)
+        runs += sorted(p for p in r.parent.glob(r.name) if p.is_dir()) if "*" in r.name else [r]
+    for run in runs:
         res = score_run(run, a.protocol)
         allres[run.name] = res
         for key, r in res.items():
